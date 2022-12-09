@@ -49,7 +49,7 @@ class TaskResponse(TaskBase):
 
 class UserBase(BaseModel):
     email: EmailStr
-    active: bool = True
+    #active: bool = True
 
 
 class UserCreate(UserBase):
@@ -58,6 +58,7 @@ class UserCreate(UserBase):
 
 class UserResponse(UserBase):
     id: int
+    group_id: int
     created_at: datetime
 
     class Config:
