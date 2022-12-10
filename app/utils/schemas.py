@@ -74,8 +74,17 @@ class UserChangeState(BaseModel):
     active: Optional[bool] = None
 
 
-class UserChangePassword(UserCreate):
+class UserChangePassword(BaseModel):
     pass
+
+
+class UserChangePassword(BaseModel):
+    password: str
+
+
+class UserChangeGroup(BaseModel):
+    group_id: int
+
 
 class Token(BaseModel):
     access_token: str
