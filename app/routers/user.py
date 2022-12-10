@@ -47,6 +47,22 @@ async def get_user(id: int, db: Session = Depends(get_db), current_user: models.
     return user
 
 
+@router.get("/group/{id}", response_model=List[schemas.UserResponse])
+async def get_user(group_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+    
+    utils.raise_403_if_user_is_not_admin(db, current_user, action_string="Retrieve User")
+    utils.raise_404_if_group_id_invalid(db,group_id)    
+
+    users = db.query(models.User).filter(models.User.group_id==group_id).all()
+    if not users:
+        raise HTTPException(
+            status_code= status.HTTP_404_NOT_FOUND,
+            detail=f"No Users Found with Group id: {group_id}"
+        )
+
+    return users
+
+
 @router.put("/state/{id}", response_model=schemas.UserResponse)
 async def change_user_state(id: int, updated_user_fields: schemas.UserChangeState, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     
