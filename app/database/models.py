@@ -12,6 +12,19 @@ class User(Base):
     password = Column(String, nullable=False)
     active = Column(Boolean, server_default='TRUE', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
+    group_id = Column(Integer, server_default="2", nullable=False)
+
+    group_id = Column(Integer, ForeignKey("UserGroups.id"), nullable=False)
+
+
+class UserGroup(Base):
+    __tablename__ = "UserGroups"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    active = Column(Boolean, server_default='TRUE', nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
 
 
 class ProjectState(Base):
