@@ -68,7 +68,7 @@ async def update_project(id: int, updated_project_fields: schemas.ProjectCreate,
 
     utils.raise_404_if_register_not_exist(project_data, id, 'Project')
 
-    if current_user.id != 1 and current_user.id != project.created_by_user_id:
+    if current_user.id != 1 and current_user.id != project_data.created_by_user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,  detail="Not Authorized to perform requested action - Project created by another User")
     
     if not project_data.active:
