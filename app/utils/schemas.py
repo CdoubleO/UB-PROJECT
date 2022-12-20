@@ -14,9 +14,26 @@ class ProjectCreate(ProjectBase):
     created_by_user_id: int
 
 
+class ProjectChangeState(BaseModel):
+    state_id: int
+
+class ProjectSearchByTitle(BaseModel):
+    title: str
+
+class ProjectStateResponse(BaseModel):
+    id: int
+    description: str
+    active: bool
+
+    class Config:
+        orm_mode = True
+
+
 class ProjectResponse(ProjectBase):
     id: int
     created_at: datetime
+    created_by_user_id: int
+    state: ProjectStateResponse
 
     class Config:
         orm_mode = True
@@ -85,6 +102,26 @@ class UserChangePassword(BaseModel):
 class UserChangeGroup(BaseModel):
     group_id: int
 
+
+class UserGroupBase(BaseModel):
+    title: str
+    description: str 
+    
+
+class UserGroupCreate(UserGroupBase):
+    pass
+
+
+class UserGroupResponse(UserGroupBase):
+    id: int
+    active: bool = True
+    
+    class Config:
+        orm_mode = True
+
+
+class UserGroupChangeState(BaseModel):
+    active: Optional[bool] = None
 
 class Token(BaseModel):
     access_token: str

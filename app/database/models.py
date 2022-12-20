@@ -1,5 +1,6 @@
 from .database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql.expression import null, text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 
@@ -54,6 +55,8 @@ class Project(Base):
     created_by_user_id = Column(Integer, ForeignKey("Users.id", ondelete="CASCADE"), nullable=False)
     
     state_id = Column(Integer, ForeignKey("ProjectStates.id"), nullable=False)
+
+    state = relationship("ProjectState")
 
 
 class Task(Base):

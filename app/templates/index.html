@@ -1,5 +1,1117 @@
-{% extends "shared/base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>    -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
-{% block title %}
-  <title>UB Project</title>
-{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous"> -->
+    <!-- <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"> -->
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> -->
+
+    <title>UB Project: Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="../static/images/logo.png">
+
+  </head>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light px-5 .fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">
+      <img src="{{ url_for('static', path='images/logo.png') }}" alt="" width="40" height="35">
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/docs/">Docs</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/redoc/">Redoc</a>
+        </li>
+        <li class="nav-item">
+          <li><a class="nav-link" id="loginButton" href="#">Login</a></li>
+        </li>
+        <li class="nav-item dropdown" id="dropdownAccount">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Account</a>
+          <ul class="dropdown-menu">
+            
+            <li><a class="dropdown-item" id="isLogged" href="#" style="color: rgb(26, 158, 26); font-weight: bold;" data-bs-toggle="modal" data-bs-target="#staticBackdrop"></a></li>
+
+            <li><hr class="dropdown-divider"></li>
+            
+            <li><a class="dropdown-item" id="userPasswordBtn" href="#" data-bs-toggle="modal" data-bs-target="#passwordModal">Change your Password</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" id="logout" href="#">Logout</a></li>
+
+          </ul>
+        </li> 
+        <li class="nav-item"><button type="button" class="btn btn-outline-success" id="creatProjectBtn">NEW</button>
+        </li>
+
+
+
+      </ul>
+    </div>
+
+      
+    <form class="d-flex" role="search" id="searchNav">
+
+      <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" id="searchInput">
+      <button class="btn btn-outline-success" type="submit">Search</button>
+    </form>
+
+  </div>
+</nav>
+
+<body id="bdiv">
+
+  <div id="alert" class="text-center"></div>
+
+
+  <div id="loginDiv" class="container col-md-4" style="visibility: hidden;">
+    <form id="loginForm" name="login">
+      <h1>Login Form</h1>
+    <div class="mb-3 mt-3">
+      <label for="email" class="form-label">Email:</label>
+      <input type="email" class="form-control" id="username" aria-describedby="emailHelp" placeholder="Enter email" name="email">
+      <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Password:</label>
+      <input type="password" class="form-control" id="password" placeholder="Enter Password" name="password">
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+  </div>
+
+
+  <div id="tablediv"></div>
+
+
+<!-- Modal password-->
+<div class="modal" id="passwordModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h4 class="modal-title">Change Password Form</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal-body text-center">
+        <form id="changeUserPasswordForm" name="changeUserPassword">
+        <div class="mb-1">
+          <input type="password" class="form-control" id="changeYourPass" placeholder="Enter Password" name="changeYourPass">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal admin-->
+<div class="modal fade modal-xl" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Admin Dashboard</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="adminbtns">
+          <button type="button" class="btn btn-primary" id="registerButton">New User</button>
+          <button type="button" class="btn btn-danger" id="disablebtn">Disable User</button>  
+          <button type="button" class="btn btn-success" id="enablebtn">Enable User</button>
+          <button type="button" class="btn btn-warning" id="groupchangebtn">Change Group</button>  
+          <button type="button" class="btn btn-primary" id="newGroupBtn">New Group</button>
+          <button type="button" class="btn btn-danger" id="groupDisableBtn">Disable Group</button>  
+          <button type="button" class="btn btn-success" id="groupEnableBtn">Enable Group</button>
+        </div>
+
+        <div id="registerDiv" class="container col-md-4" style="visibility: hidden;">
+          <form id="registerForm" name="register">
+            <h1>Register Form</h1>
+          <div class="mb-3 mt-3">
+            <label for="email" class="form-label">Email:</label>
+            <input type="email" class="form-control" id="remail" aria-describedby="emailHelp" placeholder="Enter email" name="remail">
+            <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password:</label>
+            <input type="password" class="form-control" id="rpassword" placeholder="Enter Password" name="rpassword">
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+
+        <div id="disableDiv" class="container col-md-6" style="visibility: hidden;">
+          <form id="disableUserForm" name="disable">
+            <h1>Disable User Form</h1>
+          <div class="mb-3 mt-3">
+            <select class="form-control form-control-sm" id="usersToDisable">
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+        
+        <div id="enableDiv" class="container col-md-6" style="visibility: hidden;">
+          <form id="enableUserForm" name="enable">
+            <h1>Enable User Form</h1>
+          <div class="mb-3 mt-3">
+            <select class="form-control form-control-sm" id="usersToEnable">
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+
+        <div id="changeGroupDiv" class="container col-md-6" style="visibility: hidden;">
+          <form id="changeGroupUserForm" name="changeGroup">
+            <h1>Change Group Form</h1>
+          <div class="mb-3 mt-3">
+            <select class="form-control form-control-sm" id="usersActive">
+            </select>
+          </div>
+          <div class="mb-3 mt-3">
+            <select class="form-control form-control-sm" id="groupselector">
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+
+        <div id="newGroupDiv" class="container col-md-6" style="visibility: hidden;">
+          <form id="newGroupUserForm" name="newGroup">
+            <h1>Create Group Form</h1>
+            <div class="mb-3 mt-3">
+              <label for="groupname" class="form-label">Title:</label>
+              <input type="text" class="form-control" id="groupname" placeholder="Enter email" name="groupname">
+            </div>
+            <div class="mb-3">
+              <label for="groupdesc" class="form-label">Description:</label>
+              <textarea class="form-control" id="groupdesc" name="groupdesc"></textarea>
+            </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+
+        <div id="groupStateDiv" class="container col-md-6" style="visibility: hidden;">
+          <form id="groupStateForm" name="groupState">
+            <h1 id="groupStateTitle"></h1>
+          <div class="mb-3 mt-3">
+            <select class="form-control form-control-sm" id="groupsToChangeState">
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+          </form>
+        </div>
+
+      </div>
+      <div class="modal-body">
+        <div id="alertModal"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="formStateModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h4 class="modal-title" id="formmodaltitle"></h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <!-- Modal body -->
+      <div class="modal-body text-center" id="formModalBody">
+
+      </div>
+      <div class="modal-footer" id="formModalFooter"></div>
+    </div>
+  </div>
+</div>
+</body>
+
+<script>
+// Some basic styles options to hide loading visual artifacts
+
+$("#loginDiv").hide();
+$("#loginDiv").css("visibility","visible");
+$("#registerDiv").hide();
+$("#registerDiv").css("visibility","visible");
+$("#dropdownAccount").hide();
+$("#loginButton").hide();
+$("#disableDiv").hide();
+$("#disableDiv").css("visibility","visible");
+$("#enableDiv").hide();
+$("#enableDiv").css("visibility","visible");
+$("#changeGroupDiv").hide();
+$("#changeGroupDiv").css("visibility","visible");
+$("#newGroupDiv").hide();
+$("#newGroupDiv").css("visibility","visible");
+$("#groupStateDiv").hide();
+$("#groupStateDiv").css("visibility","visible");
+$("#searchNav").hide();
+$("#searchNav").css("visibility","hidden");
+$("#creatProjectBtn").hide();
+$("#creatProjectBtn").css("visibility","hidden");
+
+
+
+// events logic
+$( document ).ready(function() {
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+
+  axios.get('http://127.0.0.1:8000/login/', headers)
+  .then(function (response) {
+      $('#isLogged').html(`${response.data.email}`)
+      $("#loginButton").hide();
+      $("#dropdownAccount").show();
+      $("#creatProjectBtn").show();
+      $("#searchNav").css("visibility","visible");
+      $("#creatProjectBtn").css("visibility","visible");
+
+  })
+  .catch(function (error) {
+    console.log(error.response)
+    $("#loginButton").show();
+    $("#searchNav").css("visibility","hidden");
+    $("#creatProjectBtn").css("visibility","hidden");
+
+  })
+  });
+
+
+$(document).on('submit','#searchNav', function (e) {
+  e.preventDefault();
+  loadtableProjects();
+});
+
+// $(document).on('click','#changePSBtn', function (e) {
+//   alert("hello")
+// });
+// $(document).on('click','#modifyPBtn', function (e) {
+//   alert("hello")
+// });
+// $(document).on('click','#deletePBtn', function (e) {
+//   alert("hello")
+// });
+
+$(document).on('click', '#dropdownAccount', function(e) {
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  axios.get('http://127.0.0.1:8000/login/', headers)
+  .then(function (response) {
+      $('#isLogged').html(`${response.data.email}`)
+      if (response.data.group_id === 1) {
+        $('#adminbtns').show();
+        $("#creatProjectBtn").show();
+
+
+      } else {
+        $('#adminbtns').hide();
+        $("#creatProjectBtn").hide();
+
+
+        $('<div class="alert alert-danger" role="alert" center>Your group does not have admin privileges</div>')
+        .appendTo('#alertModal')
+        .delay(2000)
+        .queue(function() { $(this).remove(); });
+
+      }
+      $("#searchNav").css("visibility","visible");
+
+  })
+  .catch(function (error) {
+    $('#adminbtns').hide();
+    
+  })
+  });
+$(document).on('click', '#logout', function (e) {
+  document.cookie = `${document.cookie.split("=")[0]}=`;
+  $("#dropdownAccount").hide();
+  $("#searchNav").css("visibility","hidden");
+  $("#loginButton").show();
+  $("#creatProjectBtn").css("visibility","hidden");
+  $('#tablediv').empty();
+
+
+});
+$(document).on('click', 'a#loginButton', function(e) {
+  $("#loginForm").trigger("reset");
+  $("#registerDiv").hide();
+  e.preventDefault();
+  $("#loginDiv").toggle()
+  
+});
+$(document).on('click', '#registerButton', function(e) {
+  $("#registerForm").trigger("reset");
+  $("#loginDiv").hide();
+  e.preventDefault();
+  $("#registerDiv").toggle()
+});
+$(document).on('submit', 'form#loginForm', function(e) {
+  e.preventDefault();
+
+  const data = {
+    grant_type:	"",
+    username: username.value,
+    password: password.value,
+    scope:	"",
+    client_id:	"",
+    client_secret:	""
+
+  };
+
+  const headers = {
+    headers: { "Content-Type": "application/json" }
+  };
+
+  axios.post('http://127.0.0.1:8000/login/cookie', data, headers)
+  .then(function (response) {
+    $("#loginDiv").hide();
+    $("#loginForm").trigger("reset");
+    $("#loginButton").hide();
+    $("#dropdownAccount").show()
+    $("#creatProjectBtn").show()
+    $('<div class="alert alert-success" role="alert" center>You are logged in!</div>')
+    .appendTo('#alert')
+    .delay(1000)
+    .queue(function() { $(this).remove(); });
+    $("#searchNav").css("visibility","visible");
+    $("#creatProjectBtn").css("visibility","visible");
+
+
+  })
+  .catch(function (error) {
+    let status = error.response.status;
+    let html = '<div class="alert alert-danger" role="alert" center>'
+    if (!status===403) {
+      html += 'Error!</div>';
+    }
+    html += "incorrect Password or email!</div>"
+    $(html)
+    .appendTo('#alert')
+    .delay(2000)
+    .queue(function() { $(this).remove(); });
+  })
+  });
+$(document).on('submit', 'form#registerForm', function(e) {
+  e.preventDefault();
+
+
+  const data = {
+    email: remail.value,
+    password: rpassword.value
+  };
+
+  const headers = {
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+    }};
+  axios.post('http://127.0.0.1:8000/users/', data, headers)
+  .then(function (response) {
+    $("#registerDiv").hide();
+    $("#registerForm").trigger("reset");
+    $('<div class="alert alert-success" role="alert" center>User created!</div>')
+    .appendTo('#alertModal')
+    .delay(1000)
+    .queue(function() { $(this).remove(); });
+  })
+  .catch(function (error) {
+    let status = error.response.status;
+
+    let html = '<div class="alert alert-danger" role="alert" center>';
+    if (status===401) {
+      html += "Your are not logged in!</div>";
+
+    }
+    else if (status===403) {
+      html += `${error.response.data.detail}</div>`;
+
+    }
+    else {
+      html += 'Error!</div>';
+    }
+    $(html)
+    .appendTo('#alertModal')
+    .delay(5000)
+    .queue(function() { $(this).remove(); });
+
+  })
+  });
+$(document).on('click', '#newGroupBtn', function (e) {
+  $("#newGroupUserForm").trigger("reset");
+  e.preventDefault();
+  $("#newGroupDiv").toggle()
+});
+$(document).on('submit', '#newGroupUserForm', function (e) {
+  e.preventDefault();
+
+
+  const data = {
+    title: groupname.value,
+    description: groupdesc.value
+  };
+
+  const headers = {
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+    }};
+  axios.post('http://127.0.0.1:8000/userGroup/', data, headers)
+  .then(function (response) {
+    $("#newGroupUserForm").trigger("reset");
+    $('<div class="alert alert-success" role="alert" center>Group created!</div>')
+    .appendTo('#alertModal')
+    .delay(1000)
+    .queue(function() { $(this).remove(); });
+  })
+  .catch(function (error) {
+    let status = error.response.status;
+
+    let html = '<div class="alert alert-danger" role="alert" center>';
+    if (status===401) {
+      html += "Your are not logged in!</div>";
+
+    }
+    else if (status===403) {
+      html += `${error.response.data.detail}</div>`;
+
+    }
+    else {
+      html += 'Error!</div>';
+    }
+    $(html)
+    .appendTo('#alertModal')
+    .delay(5000)
+    .queue(function() { $(this).remove(); });
+
+  })  
+});
+
+$(document).on('click', '#groupDisableBtn', function (e) {
+  // $("#groupStateDiv").hide();
+  e.preventDefault();
+
+  $("#groupStateTitle").empty();
+  $("#groupStateTitle").text("Disable Group Form");
+  
+  $('#groupsToChangeState').empty();
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+    $('#usersToDisable').empty();
+  axios.get('http://127.0.0.1:8000/userGroup/?filter_by_status=true', headers)
+  .then(function (response) {
+    response.data.forEach(group => {
+      if (group.id!=1) {
+        op = document.createElement('option');
+        op.value = group.id;
+        op.text = group.title;
+        $('#groupsToChangeState').append(op)
+      }
+
+    });
+    
+  })
+  .catch(function (error) {
+    console.log(error.response)
+
+  })
+  
+  $("#groupStateDiv").toggle()
+});
+
+$(document).on('click', '#groupEnableBtn', function (e) {
+  e.preventDefault();
+
+  $("#groupStateTitle").empty();
+  $("#groupStateTitle").text("Enable Group Form");
+  
+  $('#groupsToChangeState').empty();
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+    $('#usersToDisable').empty();
+  axios.get('http://127.0.0.1:8000/userGroup/?filter_by_status=false', headers)
+  .then(function (response) {
+    response.data.forEach(group => {
+      if (group.id!=1) {
+        op = document.createElement('option');
+        op.value = group.id;
+        op.text = group.title;
+        $('#groupsToChangeState').append(op)
+      }
+
+    });
+    
+  })
+  .catch(function (error) {
+    console.log(error.response)
+
+  })
+  
+  $('#groupStateDiv').toggle()
+});
+
+$(document).on('submit', 'form#groupStateForm', function(e) {
+  e.preventDefault();
+  let id = $('#groupsToChangeState :selected').val();
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  const body ={  }
+  axios.put(`http://127.0.0.1:8000/userGroup/state/${id}`, body, headers)
+  .then(function (response) {
+    $('#groupStateForm').trigger('reset')
+    $('#groupStateDiv').toggle()
+    $('#groupsToChangeState').empty();
+  })
+  .catch(function (error) {
+
+  })
+});
+
+
+// $(document).on('click', '#isLogged', function (e) {
+//   $('#isLogged')
+// });
+$(document).on('click', '#disablebtn', function (e) {
+  e.preventDefault();
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+    $('#usersToDisable').empty();
+  axios.get('http://127.0.0.1:8000/users/?filter_by_status=true', headers)
+  .then(function (response) {
+    response.data.forEach(user => {
+      if (user.id!=1) {
+        op = document.createElement('option');
+        op.value = user.id;
+        op.text = user.email;
+        $('#usersToDisable').append(op)
+      }
+
+    });
+    
+  })
+  .catch(function (error) {
+    console.log(error.response)
+
+  })
+
+  $('#disableDiv').toggle()
+
+
+});
+
+$(document).on('submit', 'form#disableUserForm', function(e) {
+  e.preventDefault();
+  let id = $('#usersToDisable :selected').val();
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  const body ={  }
+  axios.put(`http://127.0.0.1:8000/users/state/${id}`, body, headers)
+  .then(function (response) {
+    $('#disableUserForm').trigger('reset')
+    $('#disableDiv').toggle()
+    $('#usersToDisable').empty();
+  })
+  .catch(function (error) {
+
+  })
+});
+
+$(document).on('click', '#enablebtn', function (e) {
+  e.preventDefault();
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+    $('#usersToEnable').empty();
+  axios.get('http://127.0.0.1:8000/users/?filter_by_status=false', headers)
+  .then(function (response) {
+    response.data.forEach(user => {
+      if (user.id!=1) {
+        op = document.createElement('option');
+        op.value = user.id;
+        op.text = user.email;
+        $('#usersToEnable').append(op)
+      }
+      // console.log(response.data)
+    });
+    
+  })
+  .catch(function (error) {
+    console.log(error.response)
+
+  })
+
+  $('#enableDiv').toggle()
+
+
+});
+
+$(document).on('submit', 'form#enableUserForm', function(e) {
+  e.preventDefault();
+  let id = $('#usersToEnable :selected').val();
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  const body ={  }
+  axios.put(`http://127.0.0.1:8000/users/state/${id}`, body, headers)
+  .then(function (response) {
+    $('#enableUserForm').trigger('reset')
+    $('#enableDiv').toggle()
+    $('#usersToEnable').empty();
+  })
+  .catch(function (error) {
+
+  })
+});
+
+$(document).on('click', '#groupchangebtn', function (e) {
+  e.preventDefault();
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+ 
+    $('#usersActive').empty();
+  axios.get('http://127.0.0.1:8000/users/?filter_by_status=true', headers)
+  .then(function (response) {
+    response.data.forEach(user => {
+      if (user.id != 1) {
+        op = document.createElement('option');
+        op.value = user.id;
+        op.text = user.email;
+        $('#usersActive').append(op)
+      }
+      // console.log(response.data)
+    });
+    
+  })
+  .catch(function (error) {
+    console.log(error.response)
+
+  })
+
+    $('#groupselector').empty();
+  axios.get('http://127.0.0.1:8000/userGroup/?filter_by_status=true', headers)
+  .then(function (response) {
+    response.data.forEach(group => {
+     
+        op = document.createElement('option');
+        op.value = group.id;
+        op.text = `${group.title} < ${group.description} >` ;
+        $('#groupselector').append(op)
+      
+      // console.log(response.data)
+    });
+    
+  })
+  .catch(function (error) {
+    console.log(error.response)
+
+  })
+
+
+
+  $('#changeGroupDiv').toggle()
+
+
+});
+
+$(document).on('submit', 'form#changeGroupUserForm', function(e) {
+  e.preventDefault();
+  let gid = $('#groupselector :selected').val();
+  let uid = $('#usersActive :selected').val();
+
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  const body ={ group_id: gid }
+  axios.put(`http://127.0.0.1:8000/users/state/${uid}`, body, headers)
+  .then(function (response) {
+    $('#changeGroupUserForm').trigger('reset')
+    $('#changeGroupDiv').toggle()
+    $('#groupselector').empty();
+    $('#usersActive').empty();
+  })
+  .catch(function (error) {
+
+  })
+});
+
+
+function changeProjectStateModal(p_id,ps_id) {
+  alert(p_id)
+  alert(ps_id)
+}
+
+function loadtableProjects() {
+  $('#tablediv').empty();
+  let table = document.createElement('table');
+  table.classList.add("table");
+  table.classList.add("table-striped");
+  table.classList.add("table-hover");
+
+  let thead = document.createElement('thead');
+  table.appendChild(thead);
+  thead.innerHTML ='<tr><th scope="col">#</th><th scope="col">Title</th><th scope="col">Description</th><th scope="colgroup">Status</th></tr>';
+
+  let tbody = document.createElement('tbody');
+  table.appendChild(tbody);
+
+
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+    // $('#usersToDisable').empty();
+  if ($('#searchInput').val()=='') {
+    // all projects available to user
+    axios.get('http://127.0.0.1:8000/projects/', headers)
+  .then(function (response) {
+    response.data.forEach(project => {
+      let tr = document.createElement('tr')
+      let th = document.createElement('th')
+      th.setAttribute('scope','row')
+      th.innerText =`${project.id}`
+      tr.appendChild(th)
+      let td1 = document.createElement('td')
+      let td2 = document.createElement('td')
+      let td3 = document.createElement('td')
+      let td4 = document.createElement('td')
+      let td5 = document.createElement('td')
+      let td6 = document.createElement('td')
+      td1.innerText =`${project.title}`
+      td2.innerText =`${project.description}`
+      td3.innerText =`${project.state.description}`
+      td4.classList.add('col-md-1')
+      td5.classList.add('col-md-1')
+      td6.classList.add('col-md-1')
+      td4.innerHTML =`<button type="button" class="btn btn-success" style="width: 100%" onclick="fillProjectStateForm(${project.id},${project.state_id})">Change Status</button>`
+      td5.innerHTML ='<button type="button" class="btn btn-warning" style="width: 100%" onclick="dosomething()">Modify</button>'
+      td6.innerHTML =`<button type="button" class="btn btn-danger" style="width: 100%" onclick="deleteProject(${project.id})">Delete</button`
+      tr.appendChild(td1)
+      tr.appendChild(td2)
+      tr.appendChild(td3)
+      tr.appendChild(td4)
+      tr.appendChild(td5)
+      tr.appendChild(td6)
+
+      if (project.active) {
+        tr.classList.add('table-success')
+      } 
+      else {
+        tr.classList.add('table-danger')
+      }
+      tbody.appendChild(tr)
+    });
+    console.log(table)
+  })
+  .catch(function (error) {
+    console.log(error.response)
+
+  })
+  
+  } else {
+      // filter by title
+  axios.post('http://127.0.0.1:8000/projects/title/', {title:$('#searchInput').val()}, headers)
+  .then(function (response) {
+    response.data.forEach(project => {
+      let tr = document.createElement('tr')
+      let th = document.createElement('th')
+      th.setAttribute('scope','row')
+      th.innerText =`${project.id}`
+      tr.appendChild(th)
+      let td1 = document.createElement('td')
+      let td2 = document.createElement('td')
+      let td3 = document.createElement('td')
+      let td4 = document.createElement('td')
+      let td5 = document.createElement('td')
+      let td6 = document.createElement('td')
+      td1.innerText =`${project.title}`
+      td2.innerText =`${project.description}`
+      td3.innerText =`${project.state.description}`
+      td4.classList.add('col-md-1')
+      td5.classList.add('col-md-1')
+      td6.classList.add('col-md-1')
+      td4.innerHTML =`<button type="button" class="btn btn-success" style="width: 100%" onclick="fillProjectStateForm(${project.id},${project.state_id})">Change Status</button>`
+      td5.innerHTML =`<button type="button" class="btn btn-warning" style="width: 100%" onclick="dosomething">Modify</button>`
+      td6.innerHTML =`<button type="button" class="btn btn-danger" style="width: 100%" onclick="deleteProject(${project.id})">Delete</button`
+      tr.appendChild(td1)
+      tr.appendChild(td2)
+      tr.appendChild(td3)
+      tr.appendChild(td4)
+      tr.appendChild(td5)
+      tr.appendChild(td6)
+
+      if (project.active) {
+        tr.classList.add('table-success')
+      } 
+      else {
+        tr.classList.add('table-danger')
+      }
+      tbody.appendChild(tr)
+    });
+  })
+  .catch(function (error) {
+    console.log(error.response)
+
+  })
+
+  }
+  $('#tablediv').empty();
+  $('#tablediv').append(table);
+
+}
+var project_id = 0
+function deleteProject(p_id) {
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  axios.delete(`http://127.0.0.1:8000/projects/${p_id}`, headers)
+  .then(function (response) {
+    loadtableProjects()
+  })
+  .catch(function (error) {
+    alert(error.response.data.detail)
+  })
+}
+
+function fillProjectStateForm (p_id, s_id) {
+  $('#formModalBody').empty()
+    $('#formModalFooter').empty()
+    $('#formmodaltitle').empty()
+  $('#formStateModal').modal('show');
+  $('#formmodaltitle').text('Change Project State Form')
+  let form = document.createElement('form')
+  form.setAttribute('id','ProjectStateForm')
+  let div = document.createElement('div')
+  div.classList.add('mb-1')
+  form.appendChild(div)
+  let select = document.createElement('select')
+  select.classList.add('form-select')
+  select.setAttribute('id','ProjectStateFormInput')
+  div.appendChild(select)
+  let button = document.createElement('button')
+  button.setAttribute('type','submit')
+  button.setAttribute('id','formmodalbtnx')
+
+  button.classList.add('btn')
+  button.classList.add('btn-primary')
+  button.innerText = 'Submit'
+  $('#formModalFooter').append(button)
+  project_id = p_id
+
+  
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  axios.get('http://127.0.0.1:8000/projectState/?filter_by_status=true', headers)
+  .then(function (response) {
+    response.data.forEach(state => {
+
+      let option = document.createElement('option')
+      option.value = state.id
+      option.text = state.description
+      if (state.id==s_id) {
+        option.selected = true
+      }
+ 
+      select.appendChild(option)
+    })
+    })
+  .catch( (error) => {
+    alert(error.response.data.detail)
+  })
+
+  $('#formModalBody').append(form)
+
+}
+
+$(document).on('click','#formmodalbtnx', function (e) {
+  e.preventDefault()
+  let s_id = $('#ProjectStateFormInput').val()
+
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  const body = {
+    'state_id': `${s_id}`,
+  }
+
+  axios.put(`http://127.0.0.1:8000/projects/state/${project_id}`, body, headers)
+  .then(function (response) {
+    loadtableProjects()
+    $('#formStateModal').modal('hide');
+    $('#formModalBody').empty()
+    $('#formModalFooter').empty()
+    $('#formmodaltitle').empty()
+
+    project_id = 0
+  })
+  .catch(function (error) {
+    alert(error.response.data.detail)
+  })
+  
+})
+
+$(document).on('click','#creatProjectBtn', function (e) {
+  $('#formModalBody').empty()
+  $('#formModalFooter').empty()
+  $('#formmodaltitle').empty()
+  $('#tablediv').empty();
+
+  $('#formmodaltitle').text('Create New Project Form')
+
+  let button = document.createElement('button')
+  button.setAttribute('type','submit')
+  button.setAttribute('id','formmodalbtnProjectCreate')
+
+  button.classList.add('btn')
+  button.classList.add('btn-primary')
+  button.innerText = 'Submit'
+  $('#formModalFooter').append(button)
+
+  let form = document.createElement('form')
+  form.setAttribute('id','ProjectCreateForm')
+  let div1 = document.createElement('div')
+  div1.classList.add(['mb-3','mt-3'])
+  form.appendChild(div1)
+  let div2 = document.createElement('div')
+  div2.classList.add('mb-3')
+  form.appendChild(div2)
+  div1.innerHTML = '<label for="ptitle" class="form-label">Title:</label><input type="text" class="form-control" id="ptitle" placeholder="Enter Project title" name="ptitle">'
+  div2.innerHTML = '<label for="pdesc" class="form-label">Description:</label><textarea class="form-control" id="pdesc" placeholder="Enter Project Description" name="pdesc"></textarea>'
+  
+  $('#formModalBody').append(form)
+  
+  $('#formStateModal').modal('show');
+})
+
+
+$(document).on('click','#formmodalbtnProjectCreate', function (e) {
+  e.preventDefault()
+  let p_title = $('#ptitle').val()
+  let p_desc = $('#pdesc').val()
+
+
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  const body = {
+    'title': `${p_title}`,
+    'description': `${p_desc}`,
+    "active": true,
+    "state_id": 1,
+    "created_by_user_id": 0
+  }
+
+  axios.post(`http://127.0.0.1:8000/projects/`, body, headers)
+  .then(function (response) {
+    $('#formStateModal').modal('hide');
+    $('#formModalBody').empty()
+    $('#formModalFooter').empty()
+    $('#formmodaltitle').empty()
+  })
+  .catch(function (error) {
+    alert(error.response.data.detail)
+  })
+  
+})
+
+function dosomething() {
+  alert("WIP")
+}
+
+</script>
+</html>

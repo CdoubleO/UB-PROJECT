@@ -13,10 +13,23 @@ router = APIRouter(
 @router.get("/", response_model=List[schemas.ProjectResponse])
 async def get_projects(db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
 
-    if current_user.id == 1:
+    if current_user.id == 1 or current_user.group_id == 1:
         projects = db.query(models.Project).order_by(models.Project.id).all()
     else:
         projects = db.query(models.Project).filter(models.Project.created_by_user_id == current_user.id).order_by(models.Project.id).all()
+    
+    if not projects:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,  detail="No Projects Found")
+
+    return projects
+
+@router.post("/title", response_model=List[schemas.ProjectResponse])
+async def get_projects(project_filter: schemas.ProjectSearchByTitle, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
+
+    if current_user.id == 1 or current_user.group_id == 1:
+        projects = db.query(models.Project).filter(models.Project.title.ilike(f'%{project_filter.title}%')).order_by(models.Project.id).all()
+    else:
+        projects = db.query(models.Project).filter(models.Project.created_by_user_id == current_user.id, models.Project.title.ilike(f'%{project_filter.title}%')).order_by(models.Project.id).all()
     
     if not projects:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,  detail="No Projects Found")
@@ -80,3 +93,20 @@ async def update_project(id: int, updated_project_fields: schemas.ProjectCreate,
     return queries.update_register(project, db, updated_project_fields)
 
 
+@router.put("/state/{id}", response_model=schemas.ProjectResponse)
+async def change_project_state(id: int, updated_project_fields: schemas.ProjectChangeState, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)) :
+    project = queries.__get_register_by_id(models.Project, db, id)
+    project_data = project.first()
+
+    utils.raise_404_if_register_not_exist(project_data, id, 'Project')
+
+    if current_user.id != project_data.id:
+        utils.raise_403_if_user_is_not_admin(db, current_user)
+    
+    if not project_data.active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized to perform requested action - Project Inactive")
+
+    project_data.state_id = updated_project_fields.state_id
+    db.commit()
+
+    return project_data

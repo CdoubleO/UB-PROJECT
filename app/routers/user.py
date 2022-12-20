@@ -87,6 +87,16 @@ async def change_user_password(id: int, updated_user_fields: schemas.UserChangeP
     return utils._change_user_password(db,id,updated_user_fields)
 
 
+@router.put("/password/", response_model=schemas.UserResponse)
+async def change_current_user_password(updated_user_fields: schemas.UserChangePassword, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+    user = queries.get_register_by_id(models.User, db, current_user.id)
+    utils.raise_404_if_register_not_exist(user, current_user.id, 'User')
+
+    utils.raise_403_if_user_not_allowed_to_change_password(db, user, current_user.id)
+    utils.raise_400_if_user_not_active(db, user)
+
+    return utils._change_user_password(db,current_user.id,updated_user_fields)
+
 @router.put("/group/{id}", response_model=schemas.UserResponse)
 async def change_user_group(id: int, updated_user_fields: schemas.UserChangeGroup, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     user = queries.get_register_by_id(models.User, db, id)
