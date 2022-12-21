@@ -55,15 +55,6 @@ class TaskUpdate(BaseModel):
     title: str
     description: str 
 
-
-class TaskResponse(TaskBase):
-    id: int
-    created_at: datetime
-
-    class Config:
-        orm_mode = True
-
-
 class UserBase(BaseModel):
     email: EmailStr
     #active: bool = True
@@ -80,6 +71,21 @@ class UserResponse(UserBase):
 
     class Config:
         orm_mode = True
+
+class TaskResponse(TaskBase):
+    id: int
+    created_at: datetime
+    owner: UserResponse
+    state: ProjectStateResponse
+
+    class Config:
+        orm_mode = True
+
+
+
+
+
+
 
 
 class UserLogin(BaseModel):

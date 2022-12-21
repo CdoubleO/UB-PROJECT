@@ -72,5 +72,6 @@ class Task(Base):
 
     state_id = Column(Integer, ForeignKey("TaskStates.id"), nullable=False)
 
-
+    state = relationship('TaskState')
+    owner = relationship('User')
 

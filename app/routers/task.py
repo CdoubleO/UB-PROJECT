@@ -10,7 +10,7 @@ router = APIRouter(
     tags=['Tasks']
     )
 
-@router.get("/", response_model=List[schemas.TaskResponse])
+@router.get("/project/{id}", response_model=List[schemas.TaskResponse])
 async def get_tasks_by_project(id: int, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
     
     project = db.query(models.Project).filter(models.Project.id == id).first()
@@ -32,7 +32,11 @@ async def create_task(id: int, task: schemas.TaskCreate, db: Session = Depends(g
     project = db.query(models.Project).filter(models.Project.id == id).first()
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No Project found with ID: {id}")
-    if not project.active:
+    active = False
+    if project.active == 'true':
+        active=True
+
+    if not active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,  detail="Not Authorized to perform requested action - Create Task - Linked Project Inactive")
     if current_user.id != 1 and current_user.id != project.created_by_user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,  detail="Not Authorized to perform requested action - Create Task - Linked Project created by another User")
@@ -80,7 +84,11 @@ async def delete_task(id: int,  db: Session = Depends(get_db), current_user = De
     project = db.query(models.Project).filter(models.Project.id == task.project_id).first()
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task is not linked to project")
-    if not project.active:
+    active = False
+    if project.active == 'true':
+        active = True
+    
+    if not active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,  detail="Not Authorized to perform requested action - Delete Task - Linked Project Inactive")
     if current_user.id != 1 and current_user.id != project.created_by_user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,  detail="Not Authorized to perform requested action - Delete Task - Linked Project created by another User")

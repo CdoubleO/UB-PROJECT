@@ -70,6 +70,14 @@ async def delete_project(id: int,  db: Session = Depends(get_db), current_user =
     utils.raise_404_if_register_not_exist(project, id, 'Project')
 
     utils.raise_403_if_user_not_authorized(project, current_user.id)
+
+    active = False
+    if str(project.active) == 'true':
+        active = True
+    
+    if not active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized to perform requested action - Project Inactive")
+    
     
     return queries.delete_register(project_query, db)
 
@@ -84,11 +92,17 @@ async def update_project(id: int, updated_project_fields: schemas.ProjectCreate,
     if current_user.id != 1 and current_user.id != project_data.created_by_user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,  detail="Not Authorized to perform requested action - Project created by another User")
     
-    if not project_data.active:
+    active = False
+    if str(project_data.active) == 'true':
+        active = True
+    
+    if not active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized to perform requested action - Project Inactive")
-
-    updated_project_fields.active = True
+    print(updated_project_fields)
+    updated_project_fields.state_id = project_data.state_id
+    # updated_project_fields.active = bool(project_data.active)
     updated_project_fields.created_by_user_id = project_data.created_by_user_id
+
 
     return queries.update_register(project, db, updated_project_fields)
 
@@ -99,13 +113,17 @@ async def change_project_state(id: int, updated_project_fields: schemas.ProjectC
     project_data = project.first()
 
     utils.raise_404_if_register_not_exist(project_data, id, 'Project')
+    
 
     if current_user.id != project_data.id:
         utils.raise_403_if_user_is_not_admin(db, current_user)
+    active = False
+    if str(project_data.active) == 'true':
+        active = True
     
-    if not project_data.active:
+    if not active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized to perform requested action - Project Inactive")
-
+    
     project_data.state_id = updated_project_fields.state_id
     db.commit()
 
