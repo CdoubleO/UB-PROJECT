@@ -96,9 +96,12 @@ async def update_project(id: int, updated_project_fields: schemas.ProjectCreate,
     if str(project_data.active) == 'true':
         active = True
     
+    if updated_project_fields.active is True:
+        active = True 
+    
     if not active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized to perform requested action - Project Inactive")
-    print(updated_project_fields)
+    
     updated_project_fields.state_id = project_data.state_id
     # updated_project_fields.active = bool(project_data.active)
     updated_project_fields.created_by_user_id = project_data.created_by_user_id
