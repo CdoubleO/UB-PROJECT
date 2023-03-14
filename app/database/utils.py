@@ -209,4 +209,6 @@ def _create_user(db: Session, new_user:schemas.UserCreate):
     return new_user_register
 
 
-
+def projectHastTask(db: Session, project_id: int):
+    q = db.query(models.Task).filter(models.Task.project_id==project_id).first()
+    return True if q is not None else False

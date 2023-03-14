@@ -34,7 +34,7 @@ class ProjectResponse(ProjectBase):
     created_at: datetime
     created_by_user_id: int
     state: ProjectStateResponse
-
+    hasTask: bool = False
     class Config:
         orm_mode = True
 

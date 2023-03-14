@@ -21,6 +21,9 @@ async def get_projects(db: Session = Depends(get_db), current_user = Depends(oau
     if not projects:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,  detail="No Projects Found")
 
+    for p in projects:
+        p.hasTask = utils.projectHastTask(db, p.id)
+
     return projects
 
 @router.post("/title", response_model=List[schemas.ProjectResponse])
@@ -33,6 +36,9 @@ async def get_projects(project_filter: schemas.ProjectSearchByTitle, db: Session
     
     if not projects:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,  detail="No Projects Found")
+
+    for p in projects:
+        p.hasTask = utils.projectHastTask(db, p.id)
 
     return projects
 
@@ -54,7 +60,7 @@ async def get_project(id: int, db: Session = Depends(get_db), current_user = Dep
     project = queries.get_register_by_id(models.Project, db, id)
 
     utils.raise_404_if_register_not_exist(project, id, 'Project')
-
+    project.hasTask = utils.projectHastTask(db, id)
     return project
 
 
@@ -106,8 +112,9 @@ async def update_project(id: int, updated_project_fields: schemas.ProjectCreate,
     # updated_project_fields.active = bool(project_data.active)
     updated_project_fields.created_by_user_id = project_data.created_by_user_id
 
-
-    return queries.update_register(project, db, updated_project_fields)
+    project_updated = queries.update_register(project, db, updated_project_fields)
+    project_updated.hasTask = utils.projectHastTask(db, id)
+    return project_updated
 
 
 @router.put("/state/{id}", response_model=schemas.ProjectResponse)
@@ -127,7 +134,33 @@ async def change_project_state(id: int, updated_project_fields: schemas.ProjectC
     if not active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized to perform requested action - Project Inactive")
     
+    if (updated_project_fields.state_id == 0):
+        return project_data
+
     project_data.state_id = updated_project_fields.state_id
+    db.commit()
+
+    project_data.hasTask = utils.projectHastTask(db, id)
+    return project_data
+
+@router.get("/invertstatus/{id}", response_model=schemas.ProjectResponse)
+async def invert_project_status(id: int, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
+    project = queries.__get_register_by_id(models.Project, db, id)
+    project_data = project.first()
+
+    utils.raise_404_if_register_not_exist(project_data, id, 'Project')
+    
+
+    if current_user.id != project_data.id:
+        utils.raise_403_if_user_is_not_admin(db, current_user)
+
+    if str(project_data.active) is None:
+        return project_data
+
+    if str(project_data.active) == 'true':
+        project_data.active = 0
+    else:
+        project_data.active = 1
     db.commit()
 
     return project_data

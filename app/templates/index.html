@@ -233,13 +233,13 @@
 </div>
 
 <div class="modal fade" id="formStateModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="false">
-  <div class="modal-dialog">
+  <div class="modal-dialog" style="max-width: 1800%;">
     <div class="modal-content">
 
       <!-- Modal Header -->
       <div class="modal-header">
         <h4 class="modal-title" id="formmodaltitle"></h4>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" id="formStateModalClose"></button>
       </div>
 
       <!-- Modal body -->
@@ -334,15 +334,6 @@ $(document).on('submit','#searchNav', function (e) {
   loadtableProjects();
 });
 
-// $(document).on('click','#changePSBtn', function (e) {
-//   alert("hello")
-// });
-// $(document).on('click','#modifyPBtn', function (e) {
-//   alert("hello")
-// });
-// $(document).on('click','#deletePBtn', function (e) {
-//   alert("hello")
-// });
 
 $(document).on('click', '#dropdownAccount', function(e) {
   const headers = {
@@ -639,9 +630,6 @@ $(document).on('submit', 'form#groupStateForm', function(e) {
 });
 
 
-// $(document).on('click', '#isLogged', function (e) {
-//   $('#isLogged')
-// });
 $(document).on('click', '#disablebtn', function (e) {
   e.preventDefault();
   const headers = {
@@ -837,21 +825,83 @@ function changeProjectStateModal(p_id,ps_id) {
   alert(ps_id)
 }
 
-function loadtableProjects() {
-  $('#tablediv').empty();
-  let table = document.createElement('table');
+function formatProjectTable(Projects_list, table) {
+
   table.classList.add("table");
   table.classList.add("table-striped");
   table.classList.add("table-hover");
 
   let thead = document.createElement('thead');
   table.appendChild(thead);
-  thead.innerHTML ='<tr><th scope="col">#</th><th scope="col">Title</th><th scope="col">Description</th><th scope="colgroup">Status</th></tr>';
+  thead.innerHTML ='<tr><th scope="col" style="width: 5%"> </th><th scope="col" style="width: 15%">Title</th><th scope="col" style="width: 40%">Description</th><th scope="colgroup" style="width: 10%">Status</th><th scope="colgroup" style="width: 12.5%">Start Date</th><th scope="colgroup" style="width: 12.5%">End Date</th><th scope="col" style="width: 5%"> </th></tr>';
 
   let tbody = document.createElement('tbody');
   table.appendChild(tbody);
 
+  Projects_list.forEach(project => {
+      let tr = document.createElement('tr')
 
+      let th = document.createElement('th')
+      let td7 = document.createElement('td')
+
+      th.setAttribute('scope','row')
+      
+      if (project.active) {
+        tr.classList.add('table-success')
+        th.innerHTML = `<button type="button" class="btn btn-success" style="width: 100%" onclick="fillProjectConfigModal(${project.id},${project.state_id})">Config</button>`
+        if (project.hasTask) {
+          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 50%" onclick="fillTasksProjectModal(${project.id})">T</button>`
+        }
+        else {
+          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 50%" onclick="BtnTaskCreate(${project.id})">T+</button>`
+        }
+      }
+      else {
+        tr.classList.add('table-danger')
+        th.innerHTML = `<button type="button" class="btn btn-success" style="width: 100%" onclick="activateProject(${project.id})">Activate</button>`
+        if (project.hasTask) {
+          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 50%" onclick="fillTasksProjectModal(${project.id})">T</button>`
+        }
+        else {
+          td7.innerHTML =``
+        }
+      }
+      tr.appendChild(th)
+      let td1 = document.createElement('td')
+      let td2 = document.createElement('td')
+      let td3 = document.createElement('td')
+      td1.innerText =`${project.title}`
+      td2.innerText =`${project.description}`
+      td3.innerText =`${project.state.description}`
+      tr.appendChild(td1)
+      tr.appendChild(td2)
+      tr.appendChild(td3)
+
+
+      let td4 = document.createElement('td')
+      let td5 = document.createElement('td')
+
+      td4.innerText = `aaaa-mm-dd 00:00:00`
+      td5.innerText = `aaaa-mm-dd 00:00:00`
+
+
+      td7.classList.add('col-md-1')
+
+      tr.appendChild(td4)
+      tr.appendChild(td5)
+
+      tr.appendChild(td7)
+
+
+
+      tbody.appendChild(tr)
+   
+  })
+}
+
+function loadtableProjects() {
+  $('#tablediv').empty();
+  let table = document.createElement('table');
   const headers = {
       headers: {
       "Content-Type": "application/json",
@@ -864,49 +914,7 @@ function loadtableProjects() {
     // all projects available to user
     axios.get('http://127.0.0.1:8000/projects/', headers)
   .then(function (response) {
-    response.data.forEach(project => {
-      let tr = document.createElement('tr')
-
-      let th = document.createElement('th')
-      th.setAttribute('scope','row')
-      th.innerText =`${project.id}`
-      tr.appendChild(th)
-      let td1 = document.createElement('td')
-      let td2 = document.createElement('td')
-      let td3 = document.createElement('td')
-      let td4 = document.createElement('td')
-      let td5 = document.createElement('td')
-      let td6 = document.createElement('td')
-      let td7 = document.createElement('td')
-      td1.innerText =`${project.title}`
-      td2.innerText =`${project.description}`
-      td3.innerText =`${project.state.description}`
-      td4.classList.add('col-md-1')
-      td5.classList.add('col-md-1')
-      td6.classList.add('col-md-1')
-      td7.classList.add('col-md-1')
-      td4.innerHTML =`<button type="button" class="btn btn-success" style="width: 100%" onclick="fillProjectStateForm(${project.id},${project.state_id})">Change Status</button>`
-      td5.innerHTML =`<button type="button" class="btn btn-warning" style="width: 100%" onclick="fillModalModifyProject(${project.id})">Modify</button>`
-      td6.innerHTML =`<button type="button" class="btn btn-danger" style="width: 100%" onclick="deleteProject(${project.id})">Delete</button`
-      td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 50%" onclick="fillTasksProjectModal(${project.id})">T</button`
-      
-      tr.appendChild(td1)
-      tr.appendChild(td2)
-      tr.appendChild(td3)
-      tr.appendChild(td4)
-      tr.appendChild(td5)
-      tr.appendChild(td6)
-      tr.appendChild(td7)
-
-
-      if (project.active) {
-        tr.classList.add('table-success')
-      } 
-      else {
-        tr.classList.add('table-danger')
-      }
-      tbody.appendChild(tr)
-    });
+    formatProjectTable(response.data, table)
   })
   .catch(function (error) {
     console.log(error.response)
@@ -917,52 +925,8 @@ function loadtableProjects() {
       // filter by title
   axios.post('http://127.0.0.1:8000/projects/title/', {title:$('#searchInput').val()}, headers)
   .then(function (response) {
-    response.data.forEach(project => {
-      let tr = document.createElement('tr')
-
-      let th = document.createElement('th')
-      th.setAttribute('scope','row')
-      th.innerText =`${project.id}`
-
-      tr.appendChild(th)
-      let td1 = document.createElement('td')
-      let td2 = document.createElement('td')
-      let td3 = document.createElement('td')
-      let td4 = document.createElement('td')
-      let td5 = document.createElement('td')
-      let td6 = document.createElement('td')
-      let td7 = document.createElement('td')
-      td1.innerText =`${project.title}`
-      td2.innerText =`${project.description}`
-      td3.innerText =`${project.state.description}`
-      td4.classList.add('col-md-1')
-      td5.classList.add('col-md-1')
-      td6.classList.add('col-md-1')
-      td7.classList.add('col-md-1')
-      td4.innerHTML =`<button type="button" class="btn btn-success" style="width: 100%" onclick="fillProjectStateForm(${project.id},${project.state_id})">Change Status</button>`
-      td5.innerHTML =`<button type="button" class="btn btn-warning" style="width: 100%" onclick="fillModalModifyProject(${project.id})">Modify</button>`
-      td6.innerHTML =`<button type="button" class="btn btn-danger" style="width: 100%" onclick="deleteProject(${project.id})">Delete</button`
-      td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 50%" onclick="fillTasksProjectModal(${project.id})">T</button`
-      // td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 50%" onclick="fillTasksProjectModal(${project.id},${project.title})">T</button`
-
-      
-      tr.appendChild(td1)
-      tr.appendChild(td2)
-      tr.appendChild(td3)
-      tr.appendChild(td4)
-      tr.appendChild(td5)
-      tr.appendChild(td6)
-      tr.appendChild(td7)
-
-
-      if (project.active) {
-        tr.classList.add('table-success')
-      } 
-      else {
-        tr.classList.add('table-danger')
-      }
-      tbody.appendChild(tr)
-    });
+    formatProjectTable(response.data, table)
+  
   })
   .catch(function (error) {
     console.log(error.response)
@@ -974,6 +938,7 @@ function loadtableProjects() {
   $('#tablediv').append(table);
 
 }
+
 var project_id = 0
 function deleteProject(p_id) {
   const headers = {
@@ -996,6 +961,9 @@ function fillProjectStateForm (p_id, s_id) {
   $('#formModalBody').empty()
     $('#formModalFooter').empty()
     $('#formmodaltitle').empty()
+
+  $('#formModal2').modal('hide');
+
   $('#formStateModal').modal('show');
   $('#formmodaltitle').text('Change Project State Form')
   let form = document.createElement('form')
@@ -1066,6 +1034,7 @@ $(document).on('click','#formmodalbtnx', function (e) {
   .then(function (response) {
     loadtableProjects()
     $('#formStateModal').modal('hide');
+    $('#formModal2').modal('show');
     $('#formModalBody').empty()
     $('#formModalFooter').empty()
     $('#formmodaltitle').empty()
@@ -1077,6 +1046,10 @@ $(document).on('click','#formmodalbtnx', function (e) {
   })
   
 })
+
+$(document).on('click','#formStateModalClose', function (e) {
+  $('#formModal2').modal('show');
+});
 
 $(document).on('click','#creatProjectBtn', function (e) {
   $('#formModalBody').empty()
@@ -1173,6 +1146,8 @@ $(document).on('click','#formModalBtnProjectModify', function (e) {
     $('#formModalBody').empty()
     $('#formModalFooter').empty()
     $('#formmodaltitle').empty()
+    $('#formModal2').modal('show');
+
   })
   .catch(function (error) {
     alert(error.response.data.detail)
@@ -1182,7 +1157,7 @@ $(document).on('click','#formModalBtnProjectModify', function (e) {
 
 function fillModalModifyProject(p_id) {
   project_id = p_id;
-
+  $('#formModal2').modal('hide');
   const headers = {
       headers: {
       "Content-Type": "application/json",
@@ -1231,17 +1206,14 @@ function fillModalModifyProject(p_id) {
 
 
     $('#formModalBody').append(form)
+
     $('#formStateModal').modal('show');
+    
   })
   .catch(function (error) {
     alert(error.response.data.detail)
   })
 }
-
-$(document).on('click','#formModalBtnTaskCreate', function (e) {
-  e.preventDefault()
-
-})
 
 
 function fillTasksProjectModal(p_id) {
@@ -1274,7 +1246,7 @@ function fillTasksProjectModal(p_id) {
 
     let thead = document.createElement('thead');
     table.appendChild(thead);
-    thead.innerHTML ='<tr><th scope="col">#</th><th scope="col">Title</th><th scope="col">Description</th><th scope="colgroup">Status</th></tr>';
+    thead.innerHTML ='<tr><th scope="col" style="width: 2%"> </th><th scope="col">Title</th><th scope="col">Description</th><th scope="colgroup">Status</th></tr>';
 
     let tbody = document.createElement('tbody');
     table.appendChild(tbody);
@@ -1284,25 +1256,25 @@ function fillTasksProjectModal(p_id) {
 
       let th = document.createElement('th')
       th.setAttribute('scope','row')
-      th.innerText =`${task.id}`
+      th.innerHTML = `<button type="button" class="btn btn-success" style="width: 100%" onclick="fillTaskConfigModal(${task.id})">C</button>`
       tr.appendChild(th)
       let td1 = document.createElement('td')
       let td2 = document.createElement('td')
       let td3 = document.createElement('td')
-      let td5 = document.createElement('td')
-      let td6 = document.createElement('td')
+      //let td5 = document.createElement('td')
+      //let td6 = document.createElement('td')
       td1.innerText =`${task.title}`
       td2.innerText =`${task.description}`
       td3.innerText =`${task.state.description}`
-      td5.classList.add('col-md-1')
-      td6.classList.add('col-md-1')
-      td5.innerHTML =`<button type="button" class="btn btn-warning" style="width: 100%" onclick="modifyTask(${task.id})">Modify</button>`
-      td6.innerHTML =`<button type="button" class="btn btn-danger" style="width: 100%" id="deleteTaskT" onclick="deleteTask(${task.id})">Delete</button`
+      //td5.classList.add('col-md-1')
+      //td6.classList.add('col-md-1')
+      //td5.innerHTML =`<button type="button" class="btn btn-warning" style="width: 100%" onclick="modifyTask(${task.id})">Modify</button>`
+      //td6.innerHTML =`<button type="button" class="btn btn-danger" style="width: 100%" id="deleteTaskT" onclick="deleteTask(${task.id})">Delete</button>`
       tr.appendChild(td1)
       tr.appendChild(td2)
       tr.appendChild(td3)
-      tr.appendChild(td5)
-      tr.appendChild(td6)
+      //tr.appendChild(td5)
+      //tr.appendChild(td6)
 
       if (task.active) {
         tr.classList.add('table-success')
@@ -1319,7 +1291,8 @@ function fillTasksProjectModal(p_id) {
   })
   .catch(function (error) {
     if (error.response.status===404) {
-      alert('No Task Found For This Project')
+      // alert('No Task Found For This Project')
+      loadtableProjects()
       $('#formmodaltitle2').text(`Tasks - `)
 
       let button = document.createElement('button')
@@ -1334,6 +1307,50 @@ function fillTasksProjectModal(p_id) {
       console.log(error.response.data.detail)
     }
   })
+}
+
+function fillTaskConfigModal(t_id) {
+  $('#formModalBody2').empty()
+  $('#formModalFooter2').empty()
+  $('#formmodaltitle2').empty()
+
+  $('#formmodaltitle2').html(`Task ${t_id} - Config Buttons`)
+
+  $('#formModalBody2').html(`<button type="button" class="btn btn-warning" onclick="modifyTask(${t_id})">Modify</button>
+  <button type="button" class="btn btn-danger" id="deleteTaskT" onclick="deleteTask(${t_id})">Delete</button>` 
+  );
+
+  $('#formModal2').modal('show');
+
+}
+
+function BtnTaskCreate (p_id) {
+  $('#formModalBody2').empty()
+  $('#formModalFooter2').empty()
+  project_id = p_id
+  let button = document.createElement('button')
+  button.setAttribute('type','button')
+  button.setAttribute('id','formModalBtnTaskCreateSubmit')
+  button.classList.add('btn')
+  button.classList.add('btn-success')   
+  button.innerText = 'Submit'
+ 
+  
+  let form = document.createElement('form')
+  form.setAttribute('id','TaskCreateForm')
+  let div1 = document.createElement('div')
+  div1.classList.add(['mb-3','mt-3'])
+  form.appendChild(div1)
+  let div2 = document.createElement('div')
+  div2.classList.add('mb-3')
+  form.appendChild(div2)
+  div1.innerHTML = '<label for="ttitle" class="form-label">Title:</label><input type="text" class="form-control" id="ttitle" placeholder="Enter Task title" name="ttitle">'
+  div2.innerHTML = '<label for="tdesc" class="form-label">Description:</label><textarea class="form-control" id="tdesc" placeholder="Enter Task Description" name=tdesc"></textarea>'
+  
+  $('#formModalBody2').append(form)
+  $('#formModalFooter2').append(button)
+
+  $('#formModal2').modal('show');
 }
 
 $(document).on('click','#formModalBtnTaskCreate', function (e) {
@@ -1385,10 +1402,13 @@ $(document).on('click','#formModalBtnTaskCreateSubmit', function (e) {
 
   axios.post(`http://127.0.0.1:8000/tasks/${project_id}`, body, headers)
   .then(function (response) {
-    $('#formModal2').modal('hide');
+    // $('#formModal2').modal('hide');
     $('#formModalBody2').empty()
     $('#formModalFooter2').empty()
     $('#formmodaltitle2').empty()
+
+    loadtableProjects()
+    fillTasksProjectModal(project_id)
   })
   .catch(function (error) {
     alert(error.response.data.detail)
@@ -1482,7 +1502,38 @@ $(document).on('click','#formModalBtnTaskModifySubmit', function (e) {
   })
 })
 
+function fillProjectConfigModal(p_id, p_state_id) {
+  $('#formModalBody2').empty()
+  $('#formModalFooter2').empty()
+  $('#formmodaltitle2').empty()
 
+  $('#formmodaltitle2').html(`Project ${p_id} - Config Buttons`)
+
+  $('#formModalBody2').html(`<button type="button" class="btn btn-success" onclick="fillProjectStateForm(${p_id},${p_state_id})">Change Status</button>
+      <button type="button" class="btn btn-warning" onclick="fillModalModifyProject(${p_id})">Modify</button>
+      <button type="button" class="btn btn-danger" onclick="deleteProject(${p_id})">Delete</button>` 
+  );
+
+  $('#formModal2').modal('show');
+
+}
+
+function activateProject(p_id) {
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+  axios.get(`http://127.0.0.1:8000/projects/invertstatus/${p_id}`, headers)
+  .then(function (response) {
+    loadtableProjects()
+  })
+  .catch(function (error) {
+    console.log(error.response.data.detail)
+  })
+}
 
 </script>
 </html>
