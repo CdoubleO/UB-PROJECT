@@ -838,7 +838,12 @@ function formatProjectTable(Projects_list, table) {
   let tbody = document.createElement('tbody');
   table.appendChild(tbody);
 
+
   Projects_list.forEach(project => {
+
+
+    // let s_d =  `${start_date.getDate().toString().padStart(2, '0')}-${start_date.getMonth()==0 ? 12 :start_date.getMonth()}-${start_date.getFullYear()}`
+
       let tr = document.createElement('tr')
 
       let th = document.createElement('th')
@@ -850,17 +855,17 @@ function formatProjectTable(Projects_list, table) {
         tr.classList.add('table-success')
         th.innerHTML = `<button type="button" class="btn btn-success" style="width: 100%" onclick="fillProjectConfigModal(${project.id},${project.state_id})">Config</button>`
         if (project.hasTask) {
-          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 50%" onclick="fillTasksProjectModal(${project.id})">T</button>`
+          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 100%" onclick="fillTasksProjectModal(${project.id})">T</button>`
         }
         else {
-          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 50%" onclick="BtnTaskCreate(${project.id})">T+</button>`
+          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 100%" onclick="BtnTaskCreate(${project.id})">T+</button>`
         }
       }
       else {
         tr.classList.add('table-danger')
         th.innerHTML = `<button type="button" class="btn btn-success" style="width: 100%" onclick="activateProject(${project.id})">Activate</button>`
         if (project.hasTask) {
-          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 50%" onclick="fillTasksProjectModal(${project.id})">T</button>`
+          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 100%" onclick="fillTasksProjectModal(${project.id})">T</button>`
         }
         else {
           td7.innerHTML =``
@@ -881,10 +886,19 @@ function formatProjectTable(Projects_list, table) {
       let td4 = document.createElement('td')
       let td5 = document.createElement('td')
 
-      td4.innerText = `aaaa-mm-dd 00:00:00`
-      td5.innerText = `aaaa-mm-dd 00:00:00`
-
-
+      if (project.start_date === null || project.finish_date === null)
+      {
+        td4.innerText = 'Undecided'
+        td5.innerText = 'Undecided'
+      }
+      else 
+      {
+        let start_date = new Date( Date.parse(project.start_date) )
+        let finish_date = new Date( Date.parse(project.finish_date) )
+        td4.innerText = `${start_date.getDate().toString().padStart(2, '0')}-${(start_date.getMonth()+1).toString().padStart(2,'0')}-${start_date.getFullYear()}`
+        td5.innerText = `${finish_date.getDate().toString().padStart(2, '0')}-${(finish_date.getMonth()+1).toString().padStart(2,'0')}-${finish_date.getFullYear()}`
+      }
+      
       td7.classList.add('col-md-1')
 
       tr.appendChild(td4)
@@ -1511,12 +1525,139 @@ function fillProjectConfigModal(p_id, p_state_id) {
 
   $('#formModalBody2').html(`<button type="button" class="btn btn-success" onclick="fillProjectStateForm(${p_id},${p_state_id})">Change Status</button>
       <button type="button" class="btn btn-warning" onclick="fillModalModifyProject(${p_id})">Modify</button>
+      <button type="button" class="btn btn-warning" onclick="fillModalModifyDates(${p_id},${p_state_id})">Set Dates</button>
       <button type="button" class="btn btn-danger" onclick="deleteProject(${p_id})">Delete</button>` 
   );
 
   $('#formModal2').modal('show');
 
 }
+
+function fillModalModifyDates(p_id, status_id,) {
+  project_id = p_id;
+  $('#formModal2').modal('hide');
+ 
+  $('#formModalBody').empty()
+  $('#formModalFooter').empty()
+  $('#formmodaltitle').empty()
+
+  $('#formmodaltitle').text('Set Project Dates Form')
+
+  let button = document.createElement('button')
+  button.setAttribute('type','submit')
+  button.setAttribute('id','formModalBtnProjectDates')
+
+  button.classList.add('btn')
+  button.classList.add('btn-primary')
+  button.innerText = 'Submit'
+  $('#formModalFooter').append(button)
+
+  let form = document.createElement('form')
+  form.setAttribute('id','ProjectDateForm')
+  let div1 = document.createElement('div')
+  div1.classList.add(['mb-3','mt-3'])
+  form.appendChild(div1)
+  let div2 = document.createElement('div')
+  div2.classList.add('mb-3')
+  form.appendChild(div2)
+
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+  var now = (new Date()).setHours(00,00,00,000)
+  var startDate;
+  var endDate;
+  var creationDate;
+
+  axios.get(`http://127.0.0.1:8000/projects/dates/${p_id}`, headers)
+  .then(function (response) {
+    startDate = (new Date(response.data.start_date)).setHours(00,00,00,000)
+    endDate = (new Date(response.data.finish_date)).setHours(00,00,00,000)
+    creationDate = (new Date(response.data.created_at)).setHours(00,00,00,000)
+
+
+    if (startDate < creationDate)
+    {
+      startDate = now
+    }
+
+    if (endDate < startDate || endDate === startDate )
+    {
+      endDate = addDays(new Date(startDate).toDateString(), 1)
+    }
+    startDate = new Date(startDate)
+    endDate = new Date(endDate)
+    now = new Date(now)
+
+    let p_start = `${startDate.getFullYear()}-${(startDate.getMonth()+1).toString().padStart(2,"0")}-${startDate.getDate().toString().padStart(2,'0')}`
+    let p_end = `${endDate.getFullYear()}-${(endDate.getMonth()+1).toString().padStart(2,"0")}-${endDate.getDate().toString().padStart(2,'0')}`
+
+    let today = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`
+    let tomorrow = addDays(startDate.toDateString(), 1)
+    tomorrow = `${tomorrow.getFullYear()}-${(tomorrow.getMonth()+1).toString().padStart(2,'0')}-${tomorrow.getDate().toString().padStart(2,'0')}`
+    
+    div1.innerHTML = `<label for="start_date">Start date:</label>
+                      <input type="date" id="start_date" name="p-start"
+                          value="${p_start}"
+                          min="${today}">`
+    div2.innerHTML = `<label for="end_date">End date:</label>
+                      <input type="date" id="end_date" name="p-end"
+                          value="${p_end}"
+                          min="${tomorrow}">`
+    if (status_id != 1)
+      div1.innerHTML = `<label for="start_date">Start date:</label>
+                      <input type="date" id="start_date" name="p-start"
+                           value="${p_start}"
+                           min="${p_start}" max="${p_start}">`
+    
+    
+    
+  }).catch(function (response){
+    div1.innerText = 'Error while fetching StartDate'
+    div2.innerText = 'Error while fetching finishDate'
+    console.log(response)
+  })
+
+
+
+  $('#formModalBody').append(form);
+
+  $('#formStateModal').modal('show');
+
+}
+
+$(document).on('click', '#formModalBtnProjectDates', function (e) {
+  e.preventDefault();
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+  let val_start = new Date($('#start_date').val())
+  val_start = addDays(val_start, 1)
+  let val_end = new Date($('#end_date').val())
+  val_end = addDays(val_end, 1)
+  const body = {
+    "start_date": Date.parse(val_start),
+    "finish_date": Date.parse(val_end)
+  }
+  axios.put(`http://127.0.0.1:8000/projects/dates/${project_id}`,body,headers)
+  .then(function (response) {
+    loadtableProjects()
+    $('#formStateModal').modal('hide');
+    $('#formModal2').modal('show');
+    
+  })
+  .catch(function (error) {
+    console.log(error.response.data.detail)
+
+  })
+  
+})
 
 function activateProject(p_id) {
   const headers = {
@@ -1535,6 +1676,15 @@ function activateProject(p_id) {
   })
 }
 
+function addDays(dateString, nDays) {
+
+        originalDateInMilli = Date.parse(dateString)
+
+        newDateInMilli = originalDateInMilli + (86400000 * nDays)
+
+        return new Date(newDateInMilli)
+
+}
 </script>
 </html>
 

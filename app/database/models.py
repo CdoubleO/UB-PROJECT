@@ -53,7 +53,9 @@ class Project(Base):
     active = Column(Boolean, server_default='TRUE', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('now()'), nullable=False)
     created_by_user_id = Column(Integer, ForeignKey("Users.id", ondelete="CASCADE"), nullable=False)
-    
+    start_date = Column(TIMESTAMP(timezone=True), nullable=True)
+    finish_date = Column(TIMESTAMP(timezone=True), nullable=True)
+
     state_id = Column(Integer, ForeignKey("ProjectStates.id"), nullable=False)
 
     state = relationship("ProjectState")

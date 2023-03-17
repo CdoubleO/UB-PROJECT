@@ -14,6 +14,11 @@ class ProjectCreate(ProjectBase):
     created_by_user_id: int
 
 
+class ProjectUpdateDate(BaseModel):
+    start_date: datetime
+    finish_date: datetime
+
+
 class ProjectChangeState(BaseModel):
     state_id: int
 
@@ -34,10 +39,22 @@ class ProjectResponse(ProjectBase):
     created_at: datetime
     created_by_user_id: int
     state: ProjectStateResponse
+    start_date: Optional[datetime]
+    finish_date: Optional[datetime]
     hasTask: bool = False
+    
     class Config:
         orm_mode = True
 
+
+class ProjectDatesResponse(BaseModel):
+    id: int
+    created_at: Optional[datetime]
+    start_date: Optional[datetime]
+    finish_date: Optional[datetime]
+    
+    class Config:
+        orm_mode = True
 
 class TaskBase(BaseModel):
     title: str

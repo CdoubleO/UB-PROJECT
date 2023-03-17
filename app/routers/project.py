@@ -164,3 +164,41 @@ async def invert_project_status(id: int, db: Session = Depends(get_db), current_
     db.commit()
 
     return project_data
+
+@router.get("/dates/{id}", response_model=schemas.ProjectDatesResponse)
+async def get_project_dates(id: int, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
+    project = queries.__get_register_by_id(models.Project, db, id)
+    project_data = project.first()
+
+    utils.raise_404_if_register_not_exist(project_data, id, 'Project')
+    
+
+    if current_user.id != project_data.id:
+        utils.raise_403_if_user_is_not_admin(db, current_user)
+
+
+    return project_data
+
+
+@router.put("/dates/{id}", response_model=schemas.ProjectDatesResponse)
+async def update_project_dates(id: int, updated_project_fields: schemas.ProjectUpdateDate, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)) :
+    project = queries.__get_register_by_id(models.Project, db, id)
+    project_data = project.first()
+
+    utils.raise_404_if_register_not_exist(project_data, id, 'Project')
+
+    if current_user.id != 1 and current_user.id != project_data.created_by_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,  detail="Not Authorized to perform requested action - Project created by another User")
+    
+    active = False
+    if str(project_data.active) == 'true':
+        active = True
+    
+    if not active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not Authorized to perform requested action - Project Inactive")
+    
+    print(updated_project_fields)
+
+    project_updated = queries.update_register(project, db, updated_project_fields)
+
+    return project_updated
