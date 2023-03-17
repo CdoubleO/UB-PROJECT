@@ -865,7 +865,7 @@ function formatProjectTable(Projects_list, table) {
         tr.classList.add('table-danger')
         th.innerHTML = `<button type="button" class="btn btn-success" style="width: 100%" onclick="activateProject(${project.id})">Activate</button>`
         if (project.hasTask) {
-          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 100%" onclick="fillTasksProjectModal(${project.id})">T</button>`
+          td7.innerHTML =`<button type="button" class="btn btn-success" style="width: 100%" onclick="fillTasksProjectModalInactive(${project.id})">T</button>`
         }
         else {
           td7.innerHTML =``
@@ -1160,7 +1160,10 @@ $(document).on('click','#formModalBtnProjectModify', function (e) {
     $('#formModalBody').empty()
     $('#formModalFooter').empty()
     $('#formmodaltitle').empty()
-    $('#formModal2').modal('show');
+
+    if (response.data.active)
+      $('#formModal2').modal('show');
+    
 
   })
   .catch(function (error) {
@@ -1229,6 +1232,99 @@ function fillModalModifyProject(p_id) {
   })
 }
 
+
+function fillTasksProjectModalInactive(p_id) {
+  project_id = p_id
+  const headers = {
+      headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${document.cookie.split("=")[1]}`
+      }
+    };
+
+    $('#formModalBody2').empty()
+    $('#formModalFooter2').empty()
+    $('#formmodaltitle2').empty()
+
+  axios.get(`http://127.0.0.1:8000/tasks/project/${p_id}`, headers)
+  .then(function (response) {
+    
+    // let button = document.createElement('button')
+    // button.setAttribute('type','button')
+    // button.setAttribute('id','formModalBtnTaskCreate')
+    // button.classList.add('btn')
+    // button.classList.add('btn-success')
+    // button.innerText = 'New'
+    // $('#formModalFooter2').append(button)
+    let table = document.createElement('table');
+    table.classList.add("table");
+    table.classList.add("table-striped");
+    table.classList.add("table-hover");
+
+    let thead = document.createElement('thead');
+    table.appendChild(thead);
+    thead.innerHTML ='<tr><th scope="col" style="width: 2%"> </th><th scope="col">Title</th><th scope="col">Description</th><th scope="colgroup">Status</th></tr>';
+
+    let tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+
+    response.data.forEach(task => {
+      let tr = document.createElement('tr')
+
+      let th = document.createElement('th')
+      th.setAttribute('scope','row')
+      th.innerHTML = `<button type="button" class="btn btn-success" style="width: 100%" onclick="fillTaskConfigModal(${task.id})">C</button>`
+      tr.appendChild(th)
+      let td1 = document.createElement('td')
+      let td2 = document.createElement('td')
+      let td3 = document.createElement('td')
+      //let td5 = document.createElement('td')
+      //let td6 = document.createElement('td')
+      td1.innerText =`${task.title}`
+      td2.innerText =`${task.description}`
+      td3.innerText =`${task.state.description}`
+      //td5.classList.add('col-md-1')
+      //td6.classList.add('col-md-1')
+      //td5.innerHTML =`<button type="button" class="btn btn-warning" style="width: 100%" onclick="modifyTask(${task.id})">Modify</button>`
+      //td6.innerHTML =`<button type="button" class="btn btn-danger" style="width: 100%" id="deleteTaskT" onclick="deleteTask(${task.id})">Delete</button>`
+      tr.appendChild(td1)
+      tr.appendChild(td2)
+      tr.appendChild(td3)
+      //tr.appendChild(td5)
+      //tr.appendChild(td6)
+
+      if (task.active) {
+        tr.classList.add('table-success')
+      } 
+      else {
+        tr.classList.add('table-danger')
+      }
+      tbody.appendChild(tr)
+    });
+    $('#formModalBody2').append(table)
+    $('#formmodaltitle2').text(`Tasks - `)
+    
+    $('#formModal2').modal('show');
+  })
+  .catch(function (error) {
+    if (error.response.status===404) {
+      // alert('No Task Found For This Project')
+      loadtableProjects()
+      $('#formmodaltitle2').text(`Tasks - `)
+
+      let button = document.createElement('button')
+      button.setAttribute('type','button')
+      button.setAttribute('id','formModalBtnTaskCreate')
+      button.classList.add('btn')
+      button.classList.add('btn-success')   
+      button.innerText = 'New'
+      $('#formModalFooter2').append(button)
+      $('#formModal2').modal('show');
+    } else {
+      console.log(error.response.data.detail)
+    }
+  })
+}
 
 function fillTasksProjectModal(p_id) {
   project_id = p_id
